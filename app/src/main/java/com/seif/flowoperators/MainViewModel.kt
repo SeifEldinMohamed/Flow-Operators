@@ -28,20 +28,32 @@ class MainViewModel() : ViewModel() {
 //            println(it)
 //        }.launchIn(viewModelScope)
 
+//        viewModelScope.launch {
+//           val count: Int = countDownFlow
+//                .filter { time ->
+//                    time % 2 == 0 // receive even values
+//                }
+//                .map { time ->
+//                    time * time
+//                }
+//                .onEach { time -> // it doesn't transform our values instead it does something with these
+//                    println(time)
+//                }.count{
+//
+//                    it % 2 ==0
+//                }
+//            println("The count is $count")
+//        }
         viewModelScope.launch {
-            countDownFlow
-                .filter { time ->
-                    time % 2 == 0 // receive even values
-                }
-                .map { time ->
-                    time * time
-                }
-                .onEach { time -> // it doesn't transform our values instead it does something with these
-                    println(time)
-                } // returns flow
-                .collect() { time ->
-                println("the current time is $time")
-            }
+            val reduceResult = countDownFlow
+                .reduce { accumulator, value ->
+                    accumulator + value
+                } // output = 15
+
+            val foldResult = countDownFlow
+                .fold(100) { accumulator, value ->
+                    accumulator + value
+                } // output = 115
         }
     }
 
@@ -49,3 +61,8 @@ class MainViewModel() : ViewModel() {
 // collect: emit every change happened even it takes longer time than emition
 // collectLatest: emit every change put if the work done in collector takes more time than emition then it will cancel this coroutine and collect the latest one
 // this can be used in case of we update the ui then we need the latest update no matter if there is an older change not shown
+
+// Terminal Flow Operators: it called terminal bec it terminates the flow
+// reduce:  as we can accumulate all values in list (accumulator: at first will be the first value then it will be the addition of it and value, value: next emission)
+// fold : same as reduce but it has initial value
+// count:  it will count the values match a specific condition
