@@ -21,7 +21,7 @@ class MainViewModel() : ViewModel() {
     }
 
     init {
-        collectFlow()
+        collectFlow4()
     }
 
     private fun collectFlow() {
@@ -93,6 +93,32 @@ class MainViewModel() : ViewModel() {
 
             }
         }
+    }
+
+    private fun collectFlow4(){
+        val flow = flow {
+            delay(250L)
+            emit("appetizer")
+            delay(1000L)
+            emit("main dish")
+            delay(100L)
+            emit("dessert")
+        }
+        viewModelScope.launch {
+            flow.onEach {
+                println("Flow: $it is delivered")
+            }.buffer()
+                .collect {
+                println("Flow: now eating $it")
+                delay(1500L)
+                println("Flow: finish eating $it")
+            }
+        }
+        // in this scenario the flow emits a value when finish eating is happened (when collect is finished)
+        // we have 3 strategies in this situation:
+        // 1) buffer(): will make sure that the collect is runs in different coroutine that flow does
+        // 2) conflate(): Also run collect in a difference coroutine than flow, if there are 2 emissions from the flow that we can't collect yet when finishes we will skip to the latest one (skip main dish)
+        // 3) collectLatest: only consider latest emission
     }
 
 }
