@@ -23,8 +23,40 @@ class MainViewModel() : ViewModel() {
     private val _stateFlow = MutableStateFlow(0)
     val stateFlow = _stateFlow.asStateFlow()
 
+    // replay: replay cache (it will cache 5 emissions in the flow for new collectors)
+    private val _sharedFlow = MutableSharedFlow<Int>(replay = 5)
+    val sharedFlow = _sharedFlow.asSharedFlow()
+    // used for one time event as naivgation to another screen as we don't want to fire again if screen is rotated
+
     init {
-        collectFlow4()
+       // collectFlow4()
+// since sharedFlow is a hot flow then if we send events before
+// collectors are triggered then this events will be lost
+
+        // in some scenarios we would like to make shared flow to cashe some emissions (keep it for potential new collectors)
+        squareNumber(3)
+
+        viewModelScope.launch {
+            // we need to collect each emit (ex: we send snack bar event and then navigate event then we want to make both action not the latest one only)
+            sharedFlow.collect() {
+                delay(2000L) // ex: network call simulation
+                println("Flow 1: The recived number is $it")
+            }
+        }
+
+        viewModelScope.launch {
+            // we need to collect each emit (ex: we send snack bar event and then navigate event then we want to make both action not the latest one only)
+            sharedFlow.collect() {
+                delay(3000L) // ex: network call simulation
+                println("Flow 2: The recived number is $it")
+            }
+        }
+    }
+
+    fun squareNumber(number: Int) {
+        viewModelScope.launch {
+            _sharedFlow.emit(number * number) // it will suspend as long as all of the shared flows collectors need to process that event\
+        }
     }
 
     fun incrementCounter() {
