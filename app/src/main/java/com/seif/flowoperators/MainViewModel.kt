@@ -7,10 +7,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class MainViewModel() : ViewModel() {
+class MainViewModel(
+    private val dispatchers: DispatcherProvider
+) : ViewModel() {
 
     val countDownFlow = flow<Int> {
-        val startingValue = 10
+        val startingValue = 5
         var currentValue = startingValue
         emit(startingValue)
         while (currentValue > 0) {
@@ -18,7 +20,7 @@ class MainViewModel() : ViewModel() {
             currentValue--
             emit(currentValue)
         }
-    }
+    }.flowOn(dispatchers.main)
 
     private val _stateFlow = MutableStateFlow(0)
     val stateFlow = _stateFlow.asStateFlow()
@@ -36,7 +38,7 @@ class MainViewModel() : ViewModel() {
         // in some scenarios we would like to make shared flow to cashe some emissions (keep it for potential new collectors)
         squareNumber(3)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             // we need to collect each emit (ex: we send snack bar event and then navigate event then we want to make both action not the latest one only)
             sharedFlow.collect() {
                 delay(2000L) // ex: network call simulation
@@ -44,7 +46,7 @@ class MainViewModel() : ViewModel() {
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             // we need to collect each emit (ex: we send snack bar event and then navigate event then we want to make both action not the latest one only)
             sharedFlow.collect() {
                 delay(3000L) // ex: network call simulation
@@ -54,7 +56,7 @@ class MainViewModel() : ViewModel() {
     }
 
     fun squareNumber(number: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             _sharedFlow.emit(number * number) // it will suspend as long as all of the shared flows collectors need to process that event\
         }
     }
@@ -68,7 +70,7 @@ class MainViewModel() : ViewModel() {
 //            println(it)
 //        }.launchIn(viewModelScope)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             val count: Int = countDownFlow
                 .filter { time ->
                     time % 2 == 0 // receive even values
@@ -84,7 +86,7 @@ class MainViewModel() : ViewModel() {
                 }
             println("The count is $count")
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             val reduceResult = countDownFlow
                 .reduce { accumulator, value ->
                     accumulator + value
@@ -104,7 +106,7 @@ class MainViewModel() : ViewModel() {
             delay(500L)
             emit(2)
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             flow1.flatMapConcat { value ->
                 flow {
                     emit(value + 1)
@@ -121,7 +123,7 @@ class MainViewModel() : ViewModel() {
     @FlowPreview
     private fun collectFlow3() {
         val flow1 = (1..5).asFlow()
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             flow1.flatMapConcat { id ->
                 //  getRecipesId(id) // this function will accessed the cache and return a flow
                 flow {
@@ -143,7 +145,7 @@ class MainViewModel() : ViewModel() {
             delay(100L)
             emit("dessert")
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             flow.onEach {
                 println("Flow: $it is delivered")
             }.buffer()

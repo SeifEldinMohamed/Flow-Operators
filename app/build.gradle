@@ -62,7 +62,10 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
 
+    // option ( making testing flows easily )
     testImplementation 'app.cash.turbine:turbine:0.7.0'
+    // truth
     testImplementation "com.google.truth:truth:1.1.3"
+    // coroutine test
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1"
 }
