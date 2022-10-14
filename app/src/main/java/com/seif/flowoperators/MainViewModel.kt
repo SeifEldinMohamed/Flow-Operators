@@ -20,8 +20,15 @@ class MainViewModel() : ViewModel() {
         }
     }
 
+    private val _stateFlow = MutableStateFlow(0)
+    val stateFlow = _stateFlow.asStateFlow()
+
     init {
         collectFlow4()
+    }
+
+    fun incrementCounter() {
+        _stateFlow.value += 1
     }
 
     private fun collectFlow() {
@@ -29,22 +36,22 @@ class MainViewModel() : ViewModel() {
 //            println(it)
 //        }.launchIn(viewModelScope)
 
-//        viewModelScope.launch {
-//           val count: Int = countDownFlow
-//                .filter { time ->
-//                    time % 2 == 0 // receive even values
-//                }
-//                .map { time ->
-//                    time * time
-//                }
-//                .onEach { time -> // it doesn't transform our values instead it does something with these
-//                    println(time)
-//                }.count{
-//
-//                    it % 2 ==0
-//                }
-//            println("The count is $count")
-//        }
+        viewModelScope.launch {
+            val count: Int = countDownFlow
+                .filter { time ->
+                    time % 2 == 0 // receive even values
+                }
+                .map { time ->
+                    time * time
+                }
+                .onEach { time -> // it doesn't transform our values instead it does something with these
+                    println(time)
+                }.count {
+
+                    it % 2 == 0
+                }
+            println("The count is $count")
+        }
         viewModelScope.launch {
             val reduceResult = countDownFlow
                 .reduce { accumulator, value ->
@@ -59,7 +66,7 @@ class MainViewModel() : ViewModel() {
     }
 
     @FlowPreview
-    private fun collectFlow2(){
+    private fun collectFlow2() {
         val flow1 = flow {
             emit(1)
             delay(500L)
@@ -72,7 +79,7 @@ class MainViewModel() : ViewModel() {
                     delay(500L)
                     emit(value + 2)
                 }
-            }.collect{ value ->
+            }.collect { value ->
                 println("the value is : $value")
 
             }
@@ -80,22 +87,22 @@ class MainViewModel() : ViewModel() {
     }
 
     @FlowPreview
-    private fun collectFlow3(){
+    private fun collectFlow3() {
         val flow1 = (1..5).asFlow()
         viewModelScope.launch {
             flow1.flatMapConcat { id ->
-           //  getRecipesId(id) // this function will accessed the cache and return a flow
+                //  getRecipesId(id) // this function will accessed the cache and return a flow
                 flow {
                     emit(id)
                 }
-            }.collect{ value ->
+            }.collect { value ->
                 println("the value is : $value")
 
             }
         }
     }
 
-    private fun collectFlow4(){
+    private fun collectFlow4() {
         val flow = flow {
             delay(250L)
             emit("appetizer")
@@ -109,10 +116,10 @@ class MainViewModel() : ViewModel() {
                 println("Flow: $it is delivered")
             }.buffer()
                 .collect {
-                println("Flow: now eating $it")
-                delay(1500L)
-                println("Flow: finish eating $it")
-            }
+                    println("Flow: now eating $it")
+                    delay(1500L)
+                    println("Flow: finish eating $it")
+                }
         }
         // in this scenario the flow emits a value when finish eating is happened (when collect is finished)
         // we have 3 strategies in this situation:
